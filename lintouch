@@ -1,0 +1,78 @@
+#!/bin/bash
+
+display_help() {
+cat <<EOF
+Usage: lintouch -p <file> -t <value> <options>
+
+Help:
+  -h, --help        print this message
+
+Standard options:
+  -p <file>         Input file
+  -t <value>        Change timestamp to <value>
+
+Timestamp selection options:
+  -c                Change the creation timestamp
+  -m                Change the modification timestamp
+
+EOF
+exit 1
+}
+
+if [ -z "$1" ] ; then
+    display_help
+fi
+
+file=""
+value=""
+timestamp=""
+
+for opt do
+    optarg="${opt#*=}"
+    case "$opt" in
+        --help)
+            display_help
+            exit 0
+            ;;
+    esac
+done
+
+while getopts "hmcp:t:" opt ; do
+    case "$opt" in
+        h)
+            display_help
+            exit 0
+            ;;
+        m)
+            timestamp="modify"
+            ;;
+        c)
+            timestamp="creation"
+            ;;
+        p)
+            file="$OPTARG"
+            ;;
+        t)
+            value="$OPTARG"
+            ;;
+        *)
+            echo "Unknown option $opt, ignored"
+            exit 1
+            ;;
+    esac
+done
+
+if [ -z "$file" ] ; then
+    echo "Error: -f filename is required" >&2
+    exit 1
+fi
+
+shift $((OPTIND - 1))
+
+if [ "$timestamp" = "modify" ] ; then
+    touch -m -d "$value" "$file"
+fi
+
+if [ "$timestamp" = "creation" ] ; then
+    setfattr --name=user.date.created --value="$value" "$file"
+fi
