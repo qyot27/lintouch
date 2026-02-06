@@ -1,0 +1,5 @@
+#!/bin/sh
+
+CREATION_TIME=$(getfattr --dump --match=user.date.created --only-values "$1")
+
+stat "$1" | sed 's/^/ /g' && echo "Created: $CREATION_TIME"
